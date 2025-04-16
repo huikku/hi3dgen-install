@@ -14,7 +14,7 @@ This repository contains everything needed to install and run Hi3DGen, a high-fi
 
 1. **Download this repository** or clone it using Git:
    ```
-   git clone https://github.com/yourusername/hi3dgen-installer.git
+   git clone https://github.com/huikku/hi3dgen-install.git
    ```
 
 2. **Run the installer**:
