@@ -30,6 +30,9 @@ ENV/
 # Model weights
 weights/
 
+# Installation directory
+Hi3DGen/
+
 # Logs
 *.log
 

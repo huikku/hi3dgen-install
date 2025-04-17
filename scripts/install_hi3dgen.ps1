@@ -56,44 +56,51 @@ function Check-GitInstallation {
 function Clone-Hi3DGenRepo {
     Set-Location -Path $scriptPath
 
-    Write-Host "Cloning Hi3DGen repository..." -ForegroundColor Cyan
+    Write-Host "Getting Hi3DGen repository..." -ForegroundColor Cyan
+
+    # First try downloading ZIP file (preferred method for most users)
     try {
-        git clone https://github.com/Hi3DGen/Hi3DGen.git
-        if ($LASTEXITCODE -ne 0) {
-            throw "Git clone failed with exit code $LASTEXITCODE"
+        $zipUrl = "https://github.com/Stable-X/Hi3DGen/archive/refs/heads/main.zip"
+        $zipPath = Join-Path $scriptPath "Hi3DGen.zip"
+        $extractPath = Join-Path $scriptPath "Hi3DGen-main"
+
+        Write-Host "Downloading Hi3DGen ZIP file..." -ForegroundColor Yellow
+        Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath
+
+        Write-Host "Extracting ZIP file..." -ForegroundColor Yellow
+        Expand-Archive -Path $zipPath -DestinationPath $scriptPath -Force
+
+        # Rename the extracted folder to Hi3DGen
+        if (Test-Path -Path $extractPath -PathType Container) {
+            if (Test-Path -Path $installDir -PathType Container) {
+                Remove-Item -Path $installDir -Recurse -Force
+            }
+            Rename-Item -Path $extractPath -NewName "Hi3DGen"
+            Write-Host "Hi3DGen files extracted successfully." -ForegroundColor Green
         }
-        Write-Host "Hi3DGen repository cloned successfully." -ForegroundColor Green
+
+        # Clean up ZIP file
+        Remove-Item -Path $zipPath -Force
     }
     catch {
-        Write-Host "Failed to clone Hi3DGen repository. Error: $_" -ForegroundColor Red
-        Write-Host "Trying alternative method..." -ForegroundColor Yellow
+        Write-Host "Failed to download and extract Hi3DGen ZIP. Error: $_" -ForegroundColor Red
+        Write-Host "Trying Git clone method..." -ForegroundColor Yellow
 
-        # Try downloading ZIP file if git clone fails
+        # Try git clone as fallback
         try {
-            $zipUrl = "https://github.com/Hi3DGen/Hi3DGen/archive/refs/heads/main.zip"
-            $zipPath = Join-Path $scriptPath "Hi3DGen.zip"
-            $extractPath = Join-Path $scriptPath "Hi3DGen-main"
-
-            Write-Host "Downloading Hi3DGen ZIP file..." -ForegroundColor Yellow
-            Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath
-
-            Write-Host "Extracting ZIP file..." -ForegroundColor Yellow
-            Expand-Archive -Path $zipPath -DestinationPath $scriptPath -Force
-
-            # Rename the extracted folder to Hi3DGen
-            if (Test-Path -Path $extractPath -PathType Container) {
-                if (Test-Path -Path $installDir -PathType Container) {
-                    Remove-Item -Path $installDir -Recurse -Force
-                }
-                Rename-Item -Path $extractPath -NewName "Hi3DGen"
-                Write-Host "Hi3DGen files extracted successfully." -ForegroundColor Green
+            # Check if Git is installed
+            if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+                throw "Git is not installed or not in PATH."
             }
 
-            # Clean up ZIP file
-            Remove-Item -Path $zipPath -Force
+            git clone https://github.com/Stable-X/Hi3DGen.git
+            if ($LASTEXITCODE -ne 0) {
+                throw "Git clone failed with exit code $LASTEXITCODE"
+            }
+            Write-Host "Hi3DGen repository cloned successfully." -ForegroundColor Green
         }
         catch {
-            Write-Host "Failed to download and extract Hi3DGen. Error: $_" -ForegroundColor Red
+            Write-Host "Failed to clone Hi3DGen repository. Error: $_" -ForegroundColor Red
             Write-Host "Please download Hi3DGen manually from https://github.com/Hi3DGen/Hi3DGen" -ForegroundColor Yellow
             exit
         }
@@ -384,9 +391,14 @@ try {
     $gitInstalled = Check-GitInstallation
     $cudaInstalled = Check-CudaInstallation
 
-    if (-not $pythonInstalled -or -not $gitInstalled) {
-        Write-Host "Please install the missing prerequisites and run this script again." -ForegroundColor Red
+    if (-not $pythonInstalled) {
+        Write-Host "Python is required. Please install Python and run this script again." -ForegroundColor Red
         exit
+    }
+
+    # Git is optional - we'll use direct download if Git is not available
+    if (-not $gitInstalled) {
+        Write-Host "Git is not installed. Will use direct download instead." -ForegroundColor Yellow
     }
 
     if (-not $cudaInstalled) {

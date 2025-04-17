@@ -31,7 +31,7 @@ This repository contains everything needed to install and run Hi3DGen, a high-fi
 If you prefer to install manually, follow these steps:
 
 1. Install Python 3.10 or newer
-2. Clone the Hi3DGen repository: `git clone https://github.com/Hi3DGen/Hi3DGen.git`
+2. Clone the Hi3DGen repository: `git clone https://github.com/Stable-X/Hi3DGen.git`
 3. Install required packages: `pip install -r requirements.txt`
 4. Create a `.env` file with your Hugging Face token:
    ```
